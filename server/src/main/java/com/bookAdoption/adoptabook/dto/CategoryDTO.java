@@ -1,36 +1,10 @@
 package com.bookAdoption.adoptabook.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.bookAdoption.adoptabook.entity.Book;
-
-public class CategoryDTO {
-    private Long id;
-    private String name;
-    private List<Book> books;
-
-    public Long getId() {
-        return id;
+public record CategoryDTO(Long id, String name, List<Long> bookIds) {
+    public CategoryDTO {
+        bookIds = (bookIds == null) ? new ArrayList<>() : new ArrayList<>(bookIds);
     }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<Book> getBooks() {
-        return books;
-    }
-
-    public void setBooks(List<Book> books) {
-        this.books = books;
-    }
-
 }

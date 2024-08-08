@@ -3,14 +3,17 @@ package com.bookAdoption.adoptabook.service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bookAdoption.adoptabook.dto.BookDTO;
 import com.bookAdoption.adoptabook.entity.Author;
 import com.bookAdoption.adoptabook.entity.Book;
 import com.bookAdoption.adoptabook.entity.Category;
+import com.bookAdoption.adoptabook.mapper.BookMapper;
 import com.bookAdoption.adoptabook.repository.AuthorInterface;
 import com.bookAdoption.adoptabook.repository.BookInterface;
 import com.bookAdoption.adoptabook.repository.CategoryInterface;
@@ -21,86 +24,122 @@ public class BookService {
 
     @Autowired
     private BookInterface bookInterface;
+
     @Autowired
     private AuthorInterface authorInterface;
+
     @Autowired
     private CategoryInterface categoryInterface;
 
-    public List<Book> getAllBooks() {
+    public List<BookDTO> getAllBooks() {
         try {
-            return bookInterface.findAll();
+            return bookInterface.findAll().stream()
+                .map(BookMapper::toBookDTO)
+                .toList();
         } catch (Exception e) {
             throw new RuntimeException("Erro ao buscar todos os livros", e);
         }
     }
 
-    public Optional<Book> getBookById(Long id) {
+    public Optional<BookDTO> getBookById(Long id) {
         try {
-            return bookInterface.findById(id);
+            Optional<Book> bookOptional = bookInterface.findById(id);
+            return bookOptional.map(BookMapper::toBookDTO);
         } catch (Exception e) {
             throw new RuntimeException("Erro ao buscar livro por ID: " + id, e);
         }
     }
 
-    public List<Book> getBooksByTitle(String title) {
+    public List<BookDTO> getBooksByTitle(String title) {
         try {
-            Optional<List<Book>> books = bookInterface.findByTitleContainingIgnoreCase(title);     
-            return books.orElse(Collections.emptyList());
+            Optional<List<Book>> booksOptional = bookInterface.findByTitleContainingIgnoreCase(title);
+            List<Book> books = booksOptional.orElse(Collections.emptyList());
+
+            return books.stream()
+                .map(BookMapper::toBookDTO)
+                .toList();
         } catch (Exception e) {
             throw new RuntimeException("Erro ao buscar livros por título: " + title, e);
         }
     }
 
-    public List<Book> getBooksByAuthorName(String authorName) {
+    public List<BookDTO> getBooksByAuthorName(String authorName) {
         try {
-            Optional<Author> author = authorInterface.findByNameIgnoreCase(authorName);
-            if (author.isPresent()) {
-                return author.get().getBooks();
+            Optional<Author> authorOptional = authorInterface.findByNameIgnoreCase(authorName);
+            if (authorOptional.isPresent()) {
+                return authorOptional.get().getBooks().stream()
+                    .map(BookMapper::toBookDTO)
+                    .collect(Collectors.toList());
             } else {
                 return Collections.emptyList();
-            }    
+            }
         } catch (Exception e) {
             throw new RuntimeException("Erro ao buscar livros por nome do autor: " + authorName, e);
         }
     }
 
-    public List<Book> getBooksByCategoryName(String categoryName) {
+    public List<BookDTO> getBooksByCategoryName(String categoryName) {
         try {
-            Optional<Category> category = categoryInterface.findByNameIgnoreCase(categoryName);
-            if (category.isPresent()) {
-                return category.get().getBooks();
+            Optional<Category> categoryOptional = categoryInterface.findByNameIgnoreCase(categoryName);
+            if (categoryOptional.isPresent()) {
+                return categoryOptional.get().getBooks().stream()
+                    .map(BookMapper::toBookDTO)
+                    .collect(Collectors.toList());
             } else {
                 return Collections.emptyList();
-            }  
+            }
         } catch (Exception e) {
             throw new RuntimeException("Erro ao buscar livros por nome da categoria: " + categoryName, e);
         }
     }
 
-    public Book addBook(Book book) {
+    public BookDTO addBook(BookDTO bookDto) {
         try {
-            return bookInterface.save(book);
+            List<Author> authors = bookDto.authorIds().stream()
+                .map(authorId -> authorInterface.findById(authorId)
+                    .orElseThrow(() -> new RuntimeException("Autor não encontrado com o ID: " + authorId)))
+                .toList();
+
+            List<Category> categories = bookDto.categoryIds().stream()
+                .map(categoryId -> categoryInterface.findById(categoryId)
+                    .orElseThrow(() -> new RuntimeException("Categoria não encontrada com o ID: " + categoryId)))
+                .toList();
+
+            Book book = BookMapper.toBookEntity(bookDto, authors, categories);
+            Book savedBook = bookInterface.save(book);
+            return BookMapper.toBookDTO(savedBook);
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao salvar livro: " + book.getTitle(), e);
+            throw new RuntimeException("Erro ao salvar livro: " + bookDto.title(), e);
         }
     }
 
-    public Book updateBookById(Long id, Book newBookData) {
+    public BookDTO updateBookById(Long id, BookDTO newBookDto) {
         try {
-            Optional<Book> bookData = bookInterface.findById(id);
-            if (bookData.isPresent()) {
-                Book updatedBookData = bookData.get();
-                updatedBookData.setTitle(newBookData.getTitle());
-                updatedBookData.setDescription(newBookData.getDescription());
-                updatedBookData.setCoverType(newBookData.getCoverType());
-                updatedBookData.setPublicationDate(newBookData.getPublicationDate());
-                if (newBookData.getAuthor() != null) {
-                    updatedBookData.setAuthor(newBookData.getAuthor());
-                }
-                if (newBookData.getCategories() != null) {
-                    updatedBookData.setCategories(newBookData.getCategories());
-                }
-                return bookInterface.save(updatedBookData);
+            Optional<Book> bookOptional = bookInterface.findById(id);
+            if (bookOptional.isPresent()) {
+                Book existingBook = bookOptional.get();
+                existingBook.setTitle(newBookDto.title());
+                existingBook.setDescription(newBookDto.description());
+                existingBook.setCoverType(newBookDto.coverType());
+                existingBook.setPublicationDate(newBookDto.publicationDate());
+    
+                existingBook.getAuthors().clear();
+                existingBook.getCategories().clear();
+    
+                List<Author> authors = newBookDto.authorIds().stream()
+                    .map(authorId -> authorInterface.findById(authorId)
+                        .orElseThrow(() -> new RuntimeException("Autor não encontrado com o ID: " + authorId)))
+                    .collect(Collectors.toList());
+                existingBook.getAuthors().addAll(authors);
+    
+                List<Category> categories = newBookDto.categoryIds().stream()
+                    .map(categoryId -> categoryInterface.findById(categoryId)
+                        .orElseThrow(() -> new RuntimeException("Categoria não encontrada com o ID: " + categoryId)))
+                    .collect(Collectors.toList());
+                existingBook.getCategories().addAll(categories);
+    
+                Book updatedBook = bookInterface.save(existingBook);
+                return BookMapper.toBookDTO(updatedBook);
             } else {
                 throw new RuntimeException("Livro não encontrado com o ID: " + id);
             }
@@ -116,5 +155,4 @@ public class BookService {
             throw new RuntimeException("Erro ao deletar livro por ID: " + id, e);
         }
     }
-
 }

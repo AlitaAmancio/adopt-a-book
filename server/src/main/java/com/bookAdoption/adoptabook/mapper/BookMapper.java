@@ -1,33 +1,42 @@
 package com.bookAdoption.adoptabook.mapper;
 
 import com.bookAdoption.adoptabook.dto.BookDTO;
+import com.bookAdoption.adoptabook.entity.Author;
 import com.bookAdoption.adoptabook.entity.Book;
+import com.bookAdoption.adoptabook.entity.Category;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class BookMapper {
-    
-    public static BookDTO toDto(Book book) {
-        BookDTO dto = new BookDTO();
-        dto.setId(book.getId());
-        dto.setTitle(book.getTitle());
-        dto.setDescription(book.getDescription());
-        dto.setCoverType(book.getCoverType());
-        dto.setPublicationDate(book.getPublicationDate());
-        dto.setAuthor(book.getAuthor());
-        dto.setCategories(book.getCategories());
-        return dto;
+
+    public static BookDTO toBookDTO(Book book) {
+        if (book == null) {
+            return null;
+        }
+        return new BookDTO(
+            book.getId(),
+            book.getTitle(),
+            book.getDescription(),
+            book.getCoverType(),
+            book.getPublicationDate(),
+            book.getAuthors().stream().map(Author::getId).collect(Collectors.toList()),
+            book.getCategories().stream().map(Category::getId).collect(Collectors.toList())
+        );
     }
 
-    public static Book toEntity(BookDTO dto) {
-        Book book = new Book();
-        book.setId(book.getId());
-        book.setTitle(book.getTitle());
-        book.setDescription(book.getDescription());
-        book.setCoverType(book.getCoverType());
-        book.setPublicationDate(book.getPublicationDate());
-        book.setAuthor(book.getAuthor());
-        book.setCategories(book.getCategories());
-        return book;
+    public static Book toBookEntity(BookDTO dto, List<Author> authors, List<Category> categories) {
+        if (dto == null) {
+            return null;
+        }
+        return new Book(
+            dto.id(),
+            dto.title(),
+            dto.description(),
+            dto.coverType(),
+            dto.publicationDate(),
+            authors,
+            categories
+        );
     }
-
 }
-

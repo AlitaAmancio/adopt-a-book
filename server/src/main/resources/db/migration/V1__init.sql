@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS book (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    coverType VARCHAR(255),
-    publicationDate DATE
+    cover_type VARCHAR(255),
+    publication_date DATE
 );
 
 -- Tabela Author_Book

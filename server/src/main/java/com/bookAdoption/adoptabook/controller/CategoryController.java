@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bookAdoption.adoptabook.entity.Category;
+import com.bookAdoption.adoptabook.dto.CategoryDTO;
 import com.bookAdoption.adoptabook.service.CategoryService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,8 +29,8 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @GetMapping("/list")
-    public ResponseEntity<List<Category>> getAllCategories() {
-        List<Category> categories = categoryService.getAllCategories();
+    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
+        List<CategoryDTO> categories = categoryService.getAllCategories();
         if (categories.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -39,15 +39,15 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
-        Optional<Category> categoryData = categoryService.getCategoryById(id);
+    public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
+        Optional<CategoryDTO> categoryData = categoryService.getCategoryById(id);
         return categoryData.map(category -> new ResponseEntity<>(category, HttpStatus.OK))
                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/list/{name}")
-    public ResponseEntity<List<Category>> getCategoriesByName(@PathVariable String name) {
-        List<Category> categoriesList = categoryService.getCategoriesByName(name);
+    public ResponseEntity<List<CategoryDTO>> getCategoriesByName(@PathVariable String name) {
+        List<CategoryDTO> categoriesList = categoryService.getCategoriesByName(name);
         if (categoriesList.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -56,14 +56,14 @@ public class CategoryController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<Category> saveCategory(@RequestBody Category category) {
-        Category categoryObject = categoryService.saveCategory(category);
-        return new ResponseEntity<>(categoryObject, HttpStatus.CREATED);
+    public ResponseEntity<CategoryDTO> saveCategory(@RequestBody CategoryDTO categoryDto) {
+        CategoryDTO savedCategory = categoryService.saveCategory(categoryDto);
+        return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Category> updateCategoryById(@PathVariable Long id, @RequestBody Category newCategoryData) {
-        Category updatedCategory = categoryService.updateCategoryById(id, newCategoryData);
+    public ResponseEntity<CategoryDTO> updateCategoryById(@PathVariable Long id, @RequestBody CategoryDTO newCategoryDto) {
+        CategoryDTO updatedCategory = categoryService.updateCategoryById(id, newCategoryDto);
         return updatedCategory != null ? new ResponseEntity<>(updatedCategory, HttpStatus.OK)
                                        : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }

@@ -8,15 +8,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bookAdoption.adoptabook.entity.Book;
+import com.bookAdoption.adoptabook.dto.BookDTO;
 import com.bookAdoption.adoptabook.service.BookService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
@@ -30,8 +30,8 @@ public class BookController {
     private BookService bookService;
 
     @GetMapping("/list")
-    public ResponseEntity<List<Book>> getAllBooks() {
-        List<Book> books = bookService.getAllBooks();
+    public ResponseEntity<List<BookDTO>> getAllBooks() {
+        List<BookDTO> books = bookService.getAllBooks();
         if (books.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -40,18 +40,15 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Book> getBookById(@PathVariable Long id) {
-        Optional<Book> bookData = bookService.getBookById(id);
-        if (bookData.isPresent()) {
-            return new ResponseEntity<>(bookData.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<BookDTO> getBookById(@PathVariable Long id) {
+        Optional<BookDTO> bookData = bookService.getBookById(id);
+        return bookData.map(book -> new ResponseEntity<>(book, HttpStatus.OK))
+                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/list/title/{title}")
-    public ResponseEntity<List<Book>> getBookByTitle(@PathVariable String title) {
-        List<Book> bookList = bookService.getBooksByTitle(title);
+    public ResponseEntity<List<BookDTO>> getBookByTitle(@PathVariable String title) {
+        List<BookDTO> bookList = bookService.getBooksByTitle(title);
         if (bookList.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -60,8 +57,8 @@ public class BookController {
     }
 
     @GetMapping("/list/author/{authorName}")
-    public ResponseEntity<List<Book>> getBooksByAuthorName(@PathVariable String authorName) {
-        List<Book> bookList = bookService.getBooksByAuthorName(authorName);
+    public ResponseEntity<List<BookDTO>> getBooksByAuthorName(@PathVariable String authorName) {
+        List<BookDTO> bookList = bookService.getBooksByAuthorName(authorName);
         if (bookList.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -70,8 +67,8 @@ public class BookController {
     }
 
     @GetMapping("/list/category/{categoryName}")
-    public ResponseEntity<List<Book>> getBooksByCategoryName(@PathVariable String categoryName) {
-        List<Book> bookList = bookService.getBooksByCategoryName(categoryName);
+    public ResponseEntity<List<BookDTO>> getBooksByCategoryName(@PathVariable String categoryName) {
+        List<BookDTO> bookList = bookService.getBooksByCategoryName(categoryName);
         if (bookList.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -80,19 +77,15 @@ public class BookController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<Book> addBook(@RequestBody Book book) {
-        Book bookObject = bookService.addBook(book);
-        return new ResponseEntity<>(bookObject, HttpStatus.OK);
+    public ResponseEntity<BookDTO> addBook(@RequestBody BookDTO bookDto) {
+        BookDTO bookObject = bookService.addBook(bookDto);
+        return new ResponseEntity<>(bookObject, HttpStatus.CREATED);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Book> updateBookById(@PathVariable Long id, @RequestBody Book newBookData) {
-        Book updatedBook = bookService.updateBookById(id, newBookData);
-        if (updatedBook != null) {
-            return new ResponseEntity<>(updatedBook, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<BookDTO> updateBookById(@PathVariable Long id, @RequestBody BookDTO newBookDto) {
+        BookDTO updatedBook = bookService.updateBookById(id, newBookDto);
+        return new ResponseEntity<>(updatedBook, HttpStatus.OK);
     }
 
     @DeleteMapping("/delete/{id}")

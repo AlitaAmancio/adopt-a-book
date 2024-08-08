@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bookAdoption.adoptabook.entity.Author;
+import com.bookAdoption.adoptabook.dto.AuthorDTO;
 import com.bookAdoption.adoptabook.service.AuthorService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,8 +30,8 @@ public class AuthorController {
     private AuthorService authorService;
 
     @GetMapping("/list")
-    public ResponseEntity<List<Author>> getAllAuthors() {
-        List<Author> authors = authorService.getAllAuthors();
+    public ResponseEntity<List<AuthorDTO>> getAllAuthors() {
+        List<AuthorDTO> authors = authorService.getAllAuthors();
         if (authors.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -40,8 +40,8 @@ public class AuthorController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Author> getAuthorById(@PathVariable Long id) {
-        Optional<Author> authorData = authorService.getAuthorById(id);
+    public ResponseEntity<AuthorDTO> getAuthorById(@PathVariable Long id) {
+        Optional<AuthorDTO> authorData = authorService.getAuthorById(id);
         if (authorData.isPresent()) {
             return new ResponseEntity<>(authorData.get(), HttpStatus.OK);
         } else {
@@ -50,8 +50,8 @@ public class AuthorController {
     }
 
     @GetMapping("/list/{name}")
-    public ResponseEntity<List<Author>> getAuthorsByName(@PathVariable String name) {
-        List<Author> authorList = authorService.getAuthorsByName(name);
+    public ResponseEntity<List<AuthorDTO>> getAuthorsByName(@PathVariable String name) {
+        List<AuthorDTO> authorList = authorService.getAuthorsByName(name);
         if (authorList.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -60,16 +60,17 @@ public class AuthorController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<Author> saveAuthor(@RequestBody Author author) {
-        Author authorObject = authorService.saveAuthor(author);
-        return new ResponseEntity<>(authorObject, HttpStatus.OK);
+    public ResponseEntity<AuthorDTO> saveAuthor(@RequestBody AuthorDTO authorDto) {
+        AuthorDTO savedAuthorDto = authorService.saveAuthor(authorDto);
+        return new ResponseEntity<>(savedAuthorDto, HttpStatus.OK);
     }
+    
 
-    @PutMapping("update/{id}")
-    public ResponseEntity<Author> updateAuthorById(@PathVariable Long id, @RequestBody Author newAuthorData) {
-        Author updatedAuthor = authorService.updateAuthorById(id, newAuthorData);
-        if (updatedAuthor != null) {
-            return new ResponseEntity<>(updatedAuthor, HttpStatus.OK);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<AuthorDTO> updateAuthorById(@PathVariable Long id, @RequestBody AuthorDTO newAuthorDto) {
+        AuthorDTO updatedAuthorDto = authorService.updateAuthorById(id, newAuthorDto);
+        if (updatedAuthorDto != null) {
+            return new ResponseEntity<>(updatedAuthorDto, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
